@@ -14,33 +14,37 @@
 }
 
 body {
-  --footer-color: var(--navy);
+  position: relative;
   margin: 0;
   height: var(--viewport-height);
   display: grid;
   place-items: center;
-  background: linear-gradient(
-    var(--paper) var(--header-bottom),
-    var(--navy) var(--header-bottom) var(--stage-bottom),
-    var(--footer-color) var(--stage-bottom)
-  );
+  background: linear-gradient(var(--paper) var(--header-bottom), var(--navy) var(--header-bottom));
   font-family: system-ui, sans-serif;
-}
-
-body:is([data-state="ready"], [data-state="playing"]) {
-  --footer-color: #d89c95;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
+body::after {
+  content: "";
+  position: absolute;
+  inset: var(--stage-bottom) 0 0;
+  background: #d89c95;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body:is([data-state="ready"], [data-state="playing"])::after { opacity: 1; }
 body[data-state="ready"] { cursor: pointer; }
 
 .stage {
+  --logo-bottom: 9.0625%;
   position: relative;
   width: var(--stage-width);
   height: var(--stage-height);
   overflow: hidden;
   background:
-    linear-gradient(var(--paper) 9.0625%, transparent 9.0625%),
+    linear-gradient(var(--paper) var(--logo-bottom), transparent var(--logo-bottom)),
     var(--navy) url("assets/bg.jpg") center / 100% 100%;
 }
 
@@ -79,6 +83,17 @@ button {
   width: 24.03%;
 }
 
+.endcard::before,
+.endcard-actions {
+  position: absolute;
+  inset: 0;
+}
+
+.endcard::before {
+  content: "";
+  background: linear-gradient(var(--paper) var(--logo-bottom), var(--navy) var(--logo-bottom));
+}
+
 .image-control {
   position: absolute;
   display: block;
@@ -86,6 +101,7 @@ button {
 }
 
 .image-control img { width: 100%; }
+.image-control:active { opacity: 0.9; }
 .fail-cta { left: 10.69%; top: 75.39%; width: 51.67%; }
 .replay { left: 10.69%; top: 84.14%; width: 51.53%; }
 .win-cta { left: 7.5%; top: 87.5%; width: 59.44%; }
@@ -125,13 +141,17 @@ button {
 
 :is(button, a):focus-visible { outline: 3px solid #ff9f8f; }
 .start:focus-visible { outline-offset: -4px; }
-#playfield:focus { outline: none; }
+#playfield:focus,
+.endcard:focus { outline: none; }
 [hidden] { display: none; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .stage {
+  body {
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --result-fade: 380ms ease-out 90ms;
   }
+
+  body::after { transition: opacity var(--result-fade); }
 
   :is([data-state="ready"], [data-state="playing"]) .tutorial {
     animation: rise-in 500ms var(--ease-out) both;
@@ -142,12 +162,14 @@ button {
     animation: tap-prompt 1.25s ease-in-out 180ms infinite;
   }
 
-  .endcard-bubble { animation: fade-in 300ms ease-out both; }
-  .endcard-bacteria { animation: rise-in 500ms var(--ease-out) 80ms both; }
-  .endcard-headline { animation: rise-in 430ms var(--ease-out) 210ms both; }
+  .endcard::before { animation: fade-in var(--result-fade) both; }
+  .endcard-bubble { animation: fade-in 460ms ease-out 220ms both; }
+  .endcard-bacteria { animation: rise-in 530ms var(--ease-out) 280ms both; }
+  .endcard-headline { animation: rise-in 520ms var(--ease-out) 430ms both; }
+  .endcard-actions img { animation: action-in 220ms var(--ease-out) both; }
 
   .endcard-character {
-    animation: character-settle 520ms var(--ease-out) 50ms both;
+    animation: character-settle 630ms var(--ease-out) 270ms both;
   }
 
   #failed .endcard-character { transform-origin: 50% 38%; }
@@ -155,7 +177,7 @@ button {
 
   .endcard-confetti {
     transform-origin: 0 17%;
-    animation: confetti-reveal 550ms var(--ease-out) 100ms both;
+    animation: confetti-reveal 640ms var(--ease-out) 280ms both;
   }
 
   @keyframes fade-in {
@@ -181,5 +203,10 @@ button {
   @keyframes confetti-reveal {
     from { opacity: 0; transform: scale(0.88); }
     to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes action-in {
+    from { opacity: 0.65; transform: translateY(5%); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }

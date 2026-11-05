@@ -11,6 +11,7 @@ const SPEED = 110;
 const RAMP_DISTANCE = 360;
 const GRAVITY = 900;
 const JUMP_VELOCITY = -255;
+const RESULT_ACTION_DELAY = 850;
 
 // Positions are sprite centers in the scrolling 1x artwork, in course order.
 const placements = [
@@ -29,6 +30,7 @@ const stage = document.querySelector('.stage');
 const canvas = document.getElementById('playfield');
 const context = canvas.getContext('2d');
 context.scale(2, 2);
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const start = document.getElementById('start');
 const status = document.getElementById('status');
@@ -40,18 +42,20 @@ const mute = document.getElementById('mute');
 const clickTag = window.clickTag || 'https://example.com/landing';
 document.querySelectorAll('.clickout').forEach(link => { link.href = clickTag; });
 
-const music = new Audio('assets/music/background_music/Funny Game Loop.mp3');
-const crash = new Audio('assets/music/crash/Cartoon Crash Boing.mp3');
-const failSound = new Audio('assets/music/endcard_fail/Fail.mp3');
-const cheer = new Audio('assets/music/endcard_win/Celebrative Happy Woohoo Cheer 2.mp3');
-music.loop = true;
-music.volume = 0.4;
+const music = loadTrack('background_music/Funny Game Loop.mp3', { volume: 0.4, loop: true });
+const crash = loadTrack('crash/Cartoon Crash Boing.mp3', { volume: 0.4 });
+const failSound = loadTrack('endcard_fail/Fail.mp3', { volume: 0.8, delay: 0.15 });
+const cheer = loadTrack('endcard_win/Celebrative Happy Woohoo Cheer 2.mp3');
 
-let sound = null;
+let audioContext;
+let activeSources = [];
+let soundSequence = 0;
 let muted = false;
 let inView = true;
 let state = 'loading';
 let frame = null;
+let resultTimer;
+let pressedAction = null;
 let previousTime = null;
 let accumulator = 0;
 let distance = 0;
@@ -127,7 +131,9 @@ function draw() {
 
   context.drawImage(border.image, 0, 0, WIDTH, HEIGHT);
   const top = Math.round(playerY - player.height / 2);
-  context.drawImage(player.image, PLAYER_X - player.width / 2, top, player.width, player.height);
+  context.translate(PLAYER_X, top + player.height / 2);
+  if (!reducedMotion.matches) context.rotate(Math.max(-0.08, Math.min(0.08, velocity / 3800)));
+  context.drawImage(player.image, -player.width / 2, -player.height / 2, player.width, player.height);
   context.restore();
 }
 
@@ -135,34 +141,76 @@ function canRun() {
   return !document.hidden && inView;
 }
 
-function syncSound() {
-  if (!sound) return;
-  if (muted || !canRun()) {
-    sound.pause();
-  } else if (sound.paused && !sound.ended) {
-    sound.play().catch(() => {});
+function loadTrack(path, { volume = 1, loop = false, delay = 0 } = {}) {
+  const file = fetch(`assets/music/${path}`)
+    .then(response => response.ok ? response.arrayBuffer() : null)
+    .catch(() => null);
+  return { file, volume, loop, delay };
+}
+
+function unlockSound() {
+  if (audioContext || !window.AudioContext) return;
+  try {
+    audioContext = new AudioContext();
+  } catch {
+    return;
+  }
+
+  for (const track of [music, crash, failSound, cheer]) {
+    track.buffer = track.file
+      .then(file => file && audioContext.decodeAudioData(file))
+      .catch(() => null);
   }
 }
 
-function setSound(next) {
-  if (sound) {
-    sound.pause();
-    sound.currentTime = 0;
+function syncSound() {
+  if (!audioContext) return;
+  const change = muted || !canRun() ? audioContext.suspend() : audioContext.resume();
+  change.catch(() => {});
+}
+
+function setSound(...tracks) {
+  const sequence = ++soundSequence;
+  for (const source of activeSources) source.stop();
+  activeSources = [];
+  if (!audioContext) return;
+
+  for (const track of tracks) {
+    track.buffer.then(buffer => {
+      // A replay or screen change can happen while a clip is still decoding.
+      if (!buffer || sequence !== soundSequence) return;
+      const source = audioContext.createBufferSource();
+      const gain = audioContext.createGain();
+      source.buffer = buffer;
+      source.loop = track.loop;
+      gain.gain.value = track.volume;
+      source.connect(gain).connect(audioContext.destination);
+      source.start(audioContext.currentTime + track.delay);
+      activeSources.push(source);
+    });
   }
-  sound = next;
-  if (sound) sound.currentTime = 0;
-  syncSound();
 }
 
 function showScreen(next) {
+  clearTimeout(resultTimer);
+  pressedAction = null;
   state = next;
   ad.dataset.state = next;
   start.hidden = next !== 'ready';
-  canvas.hidden = next !== 'ready' && next !== 'playing';
+  canvas.hidden = next === 'loading' || next === 'error';
   failed.hidden = next !== 'failed';
   won.hidden = next !== 'won';
   mute.hidden = next === 'loading' || next === 'error';
   status.hidden = next !== 'loading' && next !== 'error';
+
+  const endcard = next === 'failed' ? failed : next === 'won' ? won : null;
+  if (endcard) {
+    const actions = endcard.querySelector('.endcard-actions');
+    actions.hidden = true;
+    endcard.focus({ preventScroll: true });
+    resultTimer = setTimeout(() => { actions.hidden = false; }, RESULT_ACTION_DELAY);
+  }
+  canvas.setAttribute('aria-hidden', String(next !== 'playing'));
 }
 
 function update() {
@@ -179,12 +227,11 @@ function update() {
 
   if (hit || y < 0 || y + player.height > HEIGHT) {
     showScreen('failed');
-    setSound(hit ? crash : failSound);
-    replay.focus({ preventScroll: true });
+    if (hit) setSound(crash, failSound);
+    else setSound(failSound);
   } else if (distance >= finishDistance) {
     showScreen('won');
     setSound(cheer);
-    won.querySelector('a').focus({ preventScroll: true });
   }
 }
 
@@ -200,10 +247,8 @@ function tick(now) {
     accumulator -= STEP;
   }
 
-  if (state === 'playing') {
-    draw();
-    frame = requestAnimationFrame(tick);
-  }
+  draw();
+  if (state === 'playing') frame = requestAnimationFrame(tick);
 }
 
 function syncVisibility() {
@@ -225,7 +270,7 @@ function readyRun() {
   velocity = 0;
   accumulator = 0;
   previousTime = null;
-  setSound(null);
+  setSound();
   draw();
   showScreen('ready');
 }
@@ -236,24 +281,37 @@ function beginRun() {
   velocity = JUMP_VELOCITY;
   showScreen('playing');
   canvas.focus({ preventScroll: true });
+  unlockSound();
   setSound(music);
   syncVisibility();
 }
 
 function jump() {
-  if (state === 'playing' && canRun()) velocity = JUMP_VELOCITY;
+  if (state !== 'playing' || !canRun()) return;
+  velocity = JUMP_VELOCITY;
+  if (!muted && audioContext?.state !== 'running') syncSound();
 }
 
 start.addEventListener('click', beginRun);
 ad.addEventListener('click', event => {
+  const action = event.target.closest('.image-control');
+  // A touch released after the controls appear must have started on that control.
+  if (action && event.detail > 0 && action !== pressedAction) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (document.activeElement === action) action.closest('.endcard').focus({ preventScroll: true });
+  }
+  pressedAction = null;
   if (event.target === ad) beginRun();
-});
+}, { capture: true });
 replay.addEventListener('click', () => {
   readyRun();
   start.focus({ preventScroll: true });
 });
 ad.addEventListener('pointerdown', event => {
-  if (event.isPrimary && event.button === 0 && (event.target === ad || event.target === canvas)) jump();
+  if (!event.isPrimary || event.button !== 0) return;
+  pressedAction = event.target.closest('.image-control');
+  if (event.target === ad || event.target === canvas) jump();
 });
 canvas.addEventListener('keydown', event => {
   if (event.code !== 'Space' && event.code !== 'ArrowUp') return;
@@ -261,9 +319,6 @@ canvas.addEventListener('keydown', event => {
   if (!event.repeat) jump();
 });
 
-crash.addEventListener('ended', () => {
-  if (state === 'failed' && sound === crash) setSound(failSound);
-});
 mute.addEventListener('click', () => {
   muted = !muted;
   mute.setAttribute('aria-pressed', String(muted));

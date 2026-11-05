@@ -9,7 +9,7 @@
 </head>
 <body data-state="loading">
   <main class="stage" aria-label="Gut Run">
-    <canvas id="playfield" width="720" height="1280" tabindex="-1"
+    <canvas id="playfield" width="720" height="1280" tabindex="-1" aria-hidden="true"
       aria-label="Spielfeld. Tippen oder die Leertaste drücken, um zu springen."></canvas>
     <img class="layer logo" src="assets/logo.png" alt="Your Logo">
     <img class="layer tutorial" src="assets/01_game/tut.png" alt="Bringe Poo durch den Darm ans Ziel.">
@@ -19,7 +19,7 @@
       <img src="assets/gesture.png" alt="Tippen, um Gut Run zu starten">
     </button>
 
-    <section id="failed" class="endcard" aria-label="Lauf beendet" hidden>
+    <section id="failed" class="endcard" aria-label="Lauf beendet" tabindex="-1" hidden>
       <img class="layer endcard-bubble" src="assets/02_endcard/fail/bubble.png" alt="">
       <div class="layer endcard-bacteria" aria-hidden="true">
         <img class="layer" src="assets/02_endcard/fail/bac1.png" alt="">
@@ -31,23 +31,27 @@
       <img class="layer endcard-character" src="assets/02_endcard/fail/sad.png" alt="">
       <img class="layer endcard-headline" src="assets/02_endcard/fail/hl.png"
         alt="Poo, das tat weh! Erfahre jetzt, was deinem Darm guttut.">
-      <a class="image-control fail-cta clickout" target="_blank" rel="noopener">
-        <img src="assets/02_endcard/fail/cta.png" alt="Jetzt informieren!">
-      </a>
-      <button id="replay" class="image-control replay" type="button">
-        <img src="assets/02_endcard/fail/replay.png" alt="Nochmal spielen">
-      </button>
+      <div class="endcard-actions" hidden>
+        <a class="image-control fail-cta clickout" target="_blank" rel="noopener">
+          <img src="assets/02_endcard/fail/cta.png" alt="Jetzt informieren!">
+        </a>
+        <button id="replay" class="image-control replay" type="button">
+          <img src="assets/02_endcard/fail/replay.png" alt="Nochmal spielen">
+        </button>
+      </div>
     </section>
 
-    <section id="won" class="endcard" aria-label="Ziel erreicht" hidden>
+    <section id="won" class="endcard" aria-label="Ziel erreicht" tabindex="-1" hidden>
       <img class="layer endcard-bubble" src="assets/02_endcard/win/bubble.png" alt="">
       <img class="layer endcard-character" src="assets/02_endcard/win/happy.png" alt="">
       <img class="layer endcard-confetti" src="assets/02_endcard/win/konfetti.png" alt="">
       <img class="layer endcard-headline" src="assets/02_endcard/win/hl.png"
         alt="Poo, tut das gut! Wenn du weißt, was dein Darm braucht.">
-      <a class="image-control win-cta clickout" target="_blank" rel="noopener">
-        <img src="assets/02_endcard/win/cta.png" alt="Jetzt mehr erfahren">
-      </a>
+      <div class="endcard-actions" hidden>
+        <a class="image-control win-cta clickout" target="_blank" rel="noopener">
+          <img src="assets/02_endcard/win/cta.png" alt="Jetzt mehr erfahren">
+        </a>
+      </div>
     </section>
 
     <button id="mute" class="mute" type="button" aria-label="Ton stummschalten" aria-pressed="false" hidden>
