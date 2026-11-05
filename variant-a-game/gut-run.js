@@ -218,16 +218,22 @@ function syncVisibility() {
   syncSound();
 }
 
-function beginRun() {
-  if (state !== 'ready' && state !== 'failed') return;
-
+function readyRun() {
   distance = 0;
   playerY = START_Y;
-  velocity = JUMP_VELOCITY;
+  velocity = 0;
   accumulator = 0;
   previousTime = null;
-  showScreen('playing');
+  setSound(null);
   draw();
+  showScreen('ready');
+}
+
+function beginRun() {
+  if (state !== 'ready') return;
+
+  velocity = JUMP_VELOCITY;
+  showScreen('playing');
   canvas.focus({ preventScroll: true });
   setSound(music);
   syncVisibility();
@@ -238,7 +244,10 @@ function jump() {
 }
 
 start.addEventListener('click', beginRun);
-replay.addEventListener('click', beginRun);
+replay.addEventListener('click', () => {
+  readyRun();
+  start.focus({ preventScroll: true });
+});
 canvas.addEventListener('pointerdown', event => {
   if (event.isPrimary && event.button === 0) jump();
 });
@@ -254,7 +263,6 @@ crash.addEventListener('ended', () => {
 mute.addEventListener('click', () => {
   muted = !muted;
   mute.setAttribute('aria-pressed', String(muted));
-  mute.firstElementChild.textContent = muted ? '🔇' : '🔊';
   if (state === 'playing') canvas.focus({ preventScroll: true });
   syncSound();
 });
@@ -289,8 +297,7 @@ async function prepare() {
     left + sprite.width + 1
   ));
 
-  draw();
-  showScreen('ready');
+  readyRun();
 }
 
 prepare().catch(error => {

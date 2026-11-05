@@ -20,14 +20,16 @@
     </button>
 
     <section id="failed" class="endcard" aria-label="Lauf beendet" hidden>
-      <img class="layer" src="assets/02_endcard/fail/bubble.png" alt="">
-      <img class="layer" src="assets/02_endcard/fail/bac1.png" alt="">
-      <img class="layer" src="assets/02_endcard/fail/bac2.png" alt="">
-      <img class="layer" src="assets/02_endcard/fail/bac3.png" alt="">
-      <img class="layer" src="assets/02_endcard/fail/bac4.png" alt="">
-      <img class="layer" src="assets/02_endcard/fail/bac5.png" alt="">
-      <img class="layer" src="assets/02_endcard/fail/sad.png" alt="">
-      <img class="layer" src="assets/02_endcard/fail/hl.png"
+      <img class="layer endcard-bubble" src="assets/02_endcard/fail/bubble.png" alt="">
+      <div class="layer endcard-bacteria" aria-hidden="true">
+        <img class="layer" src="assets/02_endcard/fail/bac1.png" alt="">
+        <img class="layer" src="assets/02_endcard/fail/bac2.png" alt="">
+        <img class="layer" src="assets/02_endcard/fail/bac3.png" alt="">
+        <img class="layer" src="assets/02_endcard/fail/bac4.png" alt="">
+        <img class="layer" src="assets/02_endcard/fail/bac5.png" alt="">
+      </div>
+      <img class="layer endcard-character" src="assets/02_endcard/fail/sad.png" alt="">
+      <img class="layer endcard-headline" src="assets/02_endcard/fail/hl.png"
         alt="Poo, das tat weh! Erfahre jetzt, was deinem Darm guttut.">
       <a class="image-control fail-cta clickout" target="_blank" rel="noopener">
         <img src="assets/02_endcard/fail/cta.png" alt="Jetzt informieren!">
@@ -38,10 +40,10 @@
     </section>
 
     <section id="won" class="endcard" aria-label="Ziel erreicht" hidden>
-      <img class="layer" src="assets/02_endcard/win/bubble.png" alt="">
-      <img class="layer" src="assets/02_endcard/win/happy.png" alt="">
-      <img class="layer" src="assets/02_endcard/win/konfetti.png" alt="">
-      <img class="layer" src="assets/02_endcard/win/hl.png"
+      <img class="layer endcard-bubble" src="assets/02_endcard/win/bubble.png" alt="">
+      <img class="layer endcard-character" src="assets/02_endcard/win/happy.png" alt="">
+      <img class="layer endcard-confetti" src="assets/02_endcard/win/konfetti.png" alt="">
+      <img class="layer endcard-headline" src="assets/02_endcard/win/hl.png"
         alt="Poo, tut das gut! Wenn du weißt, was dein Darm braucht.">
       <a class="image-control win-cta clickout" target="_blank" rel="noopener">
         <img src="assets/02_endcard/win/cta.png" alt="Jetzt mehr erfahren">
@@ -49,7 +51,12 @@
     </section>
 
     <button id="mute" class="mute" type="button" aria-label="Ton stummschalten" aria-pressed="false" hidden>
-      <span aria-hidden="true">🔊</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+        <path d="M3 9h4l5-4v14l-5-4H3z" />
+        <path class="sound-on" d="M15 9a4.2 4.2 0 0 1 0 6m2.5-8.5a7.7 7.7 0 0 1 0 11" />
+        <path class="sound-off" d="M16 10l4 4m0-4-4 4" />
+      </svg>
     </button>
   </main>
 </body>
