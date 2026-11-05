@@ -1,34 +1,47 @@
 :root {
-  --navy: #0c1e46;
-  --paper: #fcfcfc;
-  --stage-width: min(100vw, 56.25vh);
+  --navy: #0b1e49;
+  --paper: #fff;
+  --viewport-height: 100vh;
+  --stage-width: min(100vw, var(--viewport-height) * 9 / 16);
   --stage-height: calc(var(--stage-width) * 16 / 9);
-  --header-bottom: calc((100vh - var(--stage-height)) / 2 + var(--stage-width) * 58 / 360);
+  --stage-inset: calc((var(--viewport-height) - var(--stage-height)) / 2);
+  --stage-bottom: calc(var(--viewport-height) - var(--stage-inset));
+  --header-bottom: calc(var(--stage-inset) + var(--stage-width) * 58 / 360);
 }
 
 @supports (height: 100dvh) {
-  :root {
-    --stage-width: min(100vw, 56.25dvh);
-    --header-bottom: calc((100dvh - var(--stage-height)) / 2 + var(--stage-width) * 58 / 360);
-  }
+  :root { --viewport-height: 100dvh; }
 }
 
 body {
+  --footer-color: var(--navy);
   margin: 0;
-  height: 100vh;
-  height: 100dvh;
+  height: var(--viewport-height);
   display: grid;
   place-items: center;
-  background: linear-gradient(var(--paper) var(--header-bottom), var(--navy) var(--header-bottom));
+  background: linear-gradient(
+    var(--paper) var(--header-bottom),
+    var(--navy) var(--header-bottom) var(--stage-bottom),
+    var(--footer-color) var(--stage-bottom)
+  );
   font-family: system-ui, sans-serif;
 }
+
+body:is([data-state="ready"], [data-state="playing"]) {
+  --footer-color: #d89c95;
+  touch-action: manipulation;
+}
+
+body[data-state="ready"] { cursor: pointer; }
 
 .stage {
   position: relative;
   width: var(--stage-width);
   height: var(--stage-height);
   overflow: hidden;
-  background: var(--navy) url("assets/bg.jpg") center / 100% 100%;
+  background:
+    linear-gradient(var(--paper) 9.0625%, transparent 9.0625%),
+    var(--navy) url("assets/bg.jpg") center / 100% 100%;
 }
 
 .layer,
@@ -44,11 +57,10 @@ body {
 .layer { pointer-events: none; }
 .logo { z-index: 1; }
 .tutorial { visibility: hidden; }
-.stage:is([data-state="ready"], [data-state="playing"]) .tutorial { visibility: visible; }
+:is([data-state="ready"], [data-state="playing"]) .tutorial { visibility: visible; }
 
 #playfield,
 .start {
-  touch-action: manipulation;
   user-select: none;
 }
 
@@ -121,7 +133,7 @@ button {
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .stage:is([data-state="ready"], [data-state="playing"]) .tutorial {
+  :is([data-state="ready"], [data-state="playing"]) .tutorial {
     animation: rise-in 500ms var(--ease-out) both;
   }
 

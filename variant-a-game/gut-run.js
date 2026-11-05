@@ -24,6 +24,7 @@ const placements = [
   ['txt9', 2030, 325],
 ];
 
+const ad = document.body;
 const stage = document.querySelector('.stage');
 const canvas = document.getElementById('playfield');
 const context = canvas.getContext('2d');
@@ -155,7 +156,7 @@ function setSound(next) {
 
 function showScreen(next) {
   state = next;
-  stage.dataset.state = next;
+  ad.dataset.state = next;
   start.hidden = next !== 'ready';
   canvas.hidden = next !== 'ready' && next !== 'playing';
   failed.hidden = next !== 'failed';
@@ -244,12 +245,15 @@ function jump() {
 }
 
 start.addEventListener('click', beginRun);
+ad.addEventListener('click', event => {
+  if (event.target === ad) beginRun();
+});
 replay.addEventListener('click', () => {
   readyRun();
   start.focus({ preventScroll: true });
 });
-canvas.addEventListener('pointerdown', event => {
-  if (event.isPrimary && event.button === 0) jump();
+ad.addEventListener('pointerdown', event => {
+  if (event.isPrimary && event.button === 0 && (event.target === ad || event.target === canvas)) jump();
 });
 canvas.addEventListener('keydown', event => {
   if (event.code !== 'Space' && event.code !== 'ArrowUp') return;
