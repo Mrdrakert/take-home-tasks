@@ -13,16 +13,9 @@ const GRAVITY = 900;
 const JUMP_VELOCITY = -255;
 const RESULT_ACTION_DELAY = 850;
 
-// Positions are sprite centers in the scrolling 1x artwork, in course order.
-const placements = [
-  ['bac1', 280, 427], ['txt1', 310, 495],
-  ['bac2', 392, 496], ['txt2', 420, 473],
-  ['txt3', 540, 277], ['bac3', 657, 516],
-  ['txt4', 770, 504], ['bac4', 902, 310],
-  ['txt5', 1045, 485], ['bac5', 1190, 352],
-  ['txt6', 1350, 305], ['bac6', 1510, 485],
-  ['txt7', 1680, 365], ['txt8', 1850, 483],
-  ['txt9', 2030, 325],
+const obstacleNames = [
+  'bac1', 'bac2', 'bac3', 'bac4', 'bac5', 'bac6',
+  'txt1', 'txt2', 'txt3', 'txt4', 'txt5', 'txt6', 'txt7', 'txt8', 'txt9',
 ];
 
 const ad = document.body;
@@ -65,6 +58,7 @@ let player;
 let border;
 let gut;
 let texture;
+let obstacleSprites;
 let course;
 let finishDistance;
 
@@ -92,6 +86,68 @@ function makeSprite(image, hitboxScale = 1) {
   }
 
   return { image, width, height, maskWidth: mask.width, maskHeight: mask.height, solid };
+}
+
+function shuffle(items, random) {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function generateCourse(sprites, random = Math.random) {
+  const between = (min, max) => min + Math.floor(random() * (max - min + 1));
+  const bacteria = shuffle(sprites.slice(0, 6), random);
+  const text = shuffle(sprites.slice(6), random);
+  const [openingText] = text.splice(text.findIndex(sprite => sprite.height <= 114), 1);
+
+  // Put a bacterium between runs of one or two words. The opening always has one of each.
+  const startsWithText = between(0, 1) === 0;
+  const wordRuns = [1, ...shuffle(startsWithText ? [1, 1, 1, 1, 2, 2] : [1, 1, 2, 2, 2], random)];
+  const textSlots = startsWithText ? [] : [false];
+  for (const [index, length] of wordRuns.entries()) {
+    if (index > 0) textSlots.push(false);
+    textSlots.push(...Array(length).fill(true));
+  }
+
+  // Two lower pairs and three upper pairs guarantee room for long words on both sides.
+  const upperSizes = shuffle([1, 2, 2, 2], random);
+  const lowerSizes = shuffle([1, 1, 2, 2], random);
+  const groupSizes = [2, ...upperSizes.flatMap((size, index) => [size, lowerSizes[index]])];
+  const lanes = groupSizes.flatMap((size, index) => Array(size).fill(index % 2 === 1));
+  const upperTextCount = lanes.filter((high, index) => high && textSlots[index]).length;
+  const longText = text.filter(sprite => sprite.height > 140);
+  const [firstUpper, lastUpper] = longText.filter(sprite => sprite.height < 160);
+  const [firstLower, lastLower] = longText.filter(sprite => sprite !== firstUpper && sprite !== lastUpper);
+  const shortText = text.filter(sprite => !longText.includes(sprite));
+  const upperText = [firstUpper, ...shortText.slice(0, upperTextCount - 2), lastUpper];
+  const lowerText = [firstLower, ...shortText.slice(upperTextCount - 2), lastLower];
+  let left = between(246, 254);
+
+  return lanes.map((high, index) => {
+    let sprite = openingText;
+    if (!textSlots[index]) sprite = bacteria.shift();
+    else if (index >= 2) sprite = (high ? upperText : lowerText).shift();
+
+    if (index > 0) left += high !== lanes[index - 1] ? between(130, 134) : between(38, 43);
+    const height = Math.ceil(sprite.height);
+    let top;
+    if (index < 2) {
+      top = between(428, Math.min(474, 562 - height));
+    } else if (high) {
+      top = height > 140 ? between(239, 245) : between(395, 411) - height;
+    } else if (height > 140) {
+      top = between(558, 562) - height;
+    } else {
+      top = between(373, Math.min(391, 562 - height));
+    }
+
+    const placement = { sprite, left, top };
+    left += Math.ceil(sprite.width);
+    return placement;
+  });
 }
 
 function touches(a, ax, ay, b, bx, by, minOverlap = 6) {
@@ -265,6 +321,7 @@ function syncVisibility() {
 }
 
 function readyRun() {
+  course = generateCourse(obstacleSprites);
   distance = 0;
   playerY = START_Y;
   velocity = 0;
@@ -337,24 +394,15 @@ async function prepare() {
     loadImage('01_game/bg_texture.png'),
     loadImage('border.png'),
     loadImage('01_game/player.png'),
-    ...placements.map(([name]) => loadImage(`01_game/${name}.png`)),
+    ...obstacleNames.map(name => loadImage(`01_game/${name}.png`)),
   ]);
 
   gut = gutImage;
   texture = textureImage;
   border = makeSprite(borderImage);
   player = makeSprite(playerImage, PLAYER_HITBOX_SCALE);
-  course = placements.map(([, x, y], index) => {
-    const sprite = makeSprite(obstacleImages[index]);
-    return {
-      sprite,
-      left: Math.round(x - sprite.width / 2),
-      top: Math.round(y - sprite.height / 2),
-    };
-  });
-  finishDistance = Math.max(gut.naturalWidth / 2 - WIDTH, ...course.map(({ left, sprite }) =>
-    left + sprite.width + 1
-  ));
+  obstacleSprites = obstacleImages.map(image => makeSprite(image));
+  finishDistance = gut.naturalWidth / 2 - WIDTH;
 
   readyRun();
 }
