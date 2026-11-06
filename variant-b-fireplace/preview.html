@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fireplace preview</title>
+  <style>
+    body { margin: 0; background: #282828; }
+
+    .preview {
+      position: relative;
+      max-width: 1680px;
+      aspect-ratio: 1680 / 975;
+      margin-inline: auto;
+      overflow: hidden;
+    }
+
+    .fireplace {
+      position: absolute;
+      inset: 0 auto auto 0;
+      display: grid;
+      width: 1680px;
+      grid-template-columns: 320px 1032px 320px;
+      grid-template-rows: 250px 725px;
+      grid-template-areas: "left top right" "left . right";
+      column-gap: 4px;
+      transform-origin: top left;
+    }
+
+    iframe { display: block; border: 0; }
+    .left { grid-area: left; }
+    .top { grid-area: top; }
+    .right { grid-area: right; }
+  </style>
+</head>
+<body>
+  <main class="preview" aria-label="Fireplace preview">
+    <div class="fireplace">
+      <iframe class="left" src="left.html" width="320" height="975" title="Left skyscraper"></iframe>
+      <iframe class="top" src="top.html" width="1032" height="250" title="Top banner"></iframe>
+      <iframe class="right" src="right.html" width="320" height="975" title="Right skyscraper"></iframe>
+    </div>
+  </main>
+  <script>
+    const preview = document.querySelector('.preview');
+    const fireplace = document.querySelector('.fireplace');
+
+    new ResizeObserver(([entry]) => {
+      const scale = entry.contentRect.width / fireplace.offsetWidth;
+      fireplace.style.transform = `scale(${scale})`;
+    }).observe(preview);
+
+  </script>
+</body>
+</html>

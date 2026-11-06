@@ -1,0 +1,54 @@
+body { margin: 0; }
+
+.creative {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  color: #fff;
+  background-color: #283322;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  text-decoration: none;
+}
+
+.creative:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+
+.creative--top {
+  width: 1032px;
+  height: 250px;
+  background-image: url("assets/top/bg.jpg");
+}
+
+.creative--side {
+  width: 320px;
+  height: 975px;
+}
+
+.creative--left { background-image: url("assets/left/bg.jpg"); }
+.creative--right { background-image: url("assets/right/bg.jpg"); }
+
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+.panel {
+  clip-path: inset(744.5px 0 61px);
+  opacity: 0.8;
+}
+
+.copy { mix-blend-mode: screen; }
+
+.cta {
+  position: absolute;
+  top: 836px;
+  left: 73.75px;
+  width: 172.5px;
+  height: 46.5px;
+  border-radius: 8px;
+}
+
