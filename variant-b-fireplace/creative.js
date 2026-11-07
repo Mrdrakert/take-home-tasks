@@ -17,7 +17,10 @@ const waitsForPreview = window.parent !== window && new URLSearchParams(location
 if (waitsForPreview) {
   window.addEventListener('message', event => {
     if (event.source !== window.parent || event.origin !== location.origin) return;
-    if (event.data?.type === 'fireplace:start' && Number.isFinite(event.data.startAt)) {
+    if (event.data?.type !== 'fireplace:start') return;
+    if (event.data.showFinal === true) {
+      root.classList.remove('motion-enabled');
+    } else if (Number.isFinite(event.data.startAt)) {
       startIntro(event.data.startAt);
     }
   });

@@ -3,7 +3,7 @@ const HEIGHT = 640;
 const FIELD_TOP = 168.5;
 const PLAYER_X = 76;
 const START_Y = 316;
-const PLAYER_HITBOX_SCALE = 0.78;
+const PLAYER_HITBOX_SCALE = 0.7;
 const BORDER_OVERLAP = 24;
 const STEP = 1 / 120;
 const START_SPEED = 65;
@@ -24,6 +24,7 @@ const canvas = document.getElementById('playfield');
 const context = canvas.getContext('2d');
 context.scale(2, 2);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const showHitboxes = new URLSearchParams(location.search).get('debug') === '1';
 
 const start = document.getElementById('start');
 const status = document.getElementById('status');
@@ -78,14 +79,26 @@ function makeSprite(image, hitboxScale = 1) {
   const hitboxWidth = width * hitboxScale;
   const hitboxHeight = height * hitboxScale;
   maskContext.drawImage(image, (width - hitboxWidth) / 2, (height - hitboxHeight) / 2, hitboxWidth, hitboxHeight);
-  const rgba = maskContext.getImageData(0, 0, mask.width, mask.height).data;
+  const pixels = maskContext.getImageData(0, 0, mask.width, mask.height);
+  const rgba = pixels.data;
   const solid = new Uint8Array(mask.width * mask.height);
 
   for (let i = 0; i < solid.length; i += 1) {
     solid[i] = rgba[i * 4 + 3] >= 160;
   }
 
-  return { image, width, height, maskWidth: mask.width, maskHeight: mask.height, solid };
+  if (showHitboxes) {
+    for (let i = 0; i < solid.length; i += 1) {
+      const offset = i * 4;
+      rgba[offset] = 0;
+      rgba[offset + 1] = 255;
+      rgba[offset + 2] = 224;
+      rgba[offset + 3] = solid[i] ? 128 : 0;
+    }
+    maskContext.putImageData(pixels, 0, 0);
+  }
+
+  return { image, width, height, maskWidth: mask.width, maskHeight: mask.height, solid, hitbox: showHitboxes ? mask : null };
 }
 
 function shuffle(items, random) {
@@ -183,14 +196,17 @@ function draw() {
     const x = Math.round(left - distance);
     if (x >= WIDTH || x + sprite.width <= 0) continue;
     context.drawImage(sprite.image, x, top, sprite.width, sprite.height);
+    if (sprite.hitbox) context.drawImage(sprite.hitbox, x, top);
   }
 
   context.drawImage(border.image, 0, 0, WIDTH, HEIGHT);
+  if (border.hitbox) context.drawImage(border.hitbox, 0, 0);
   const top = Math.round(playerY - player.height / 2);
   context.translate(PLAYER_X, top + player.height / 2);
   if (!reducedMotion.matches) context.rotate(Math.max(-0.08, Math.min(0.08, velocity / 3800)));
   context.drawImage(player.image, -player.width / 2, -player.height / 2, player.width, player.height);
   context.restore();
+  if (player.hitbox) context.drawImage(player.hitbox, PLAYER_X - player.width / 2, top);
 }
 
 function canRun() {
