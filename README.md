@@ -12,4 +12,4 @@ With the same local server running, open the [Fireplace preview](http://localhos
 
 Each part uses its supplied pre-cut background at half the export size. These crops preserve the mockup's product positions and keep the rock inside the top banner. At each join, the neighboring panels sample consecutive strips of moss from the same side export and blend them into their own backgrounds. The preview places the panels flush so the texture continues across the joins. The top banner uses the supplied headline artwork and its wording.
 
-The preview starts all three intros together. Open `top.html`, `left.html`, or `right.html` directly to see its standalone intro. Reduced motion shows the finished layout immediately.
+The preview starts all three intros together. After the intro, a soft light sweeps across the moss and the CTAs pulse gently. Both effects stop before 30 seconds. Open `top.html`, `left.html`, or `right.html` directly to see its standalone intro. Reduced motion shows the finished layout immediately.

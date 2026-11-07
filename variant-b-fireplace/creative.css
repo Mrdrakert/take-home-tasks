@@ -20,6 +20,7 @@ body { margin: 0; }
 }
 
 .creative--top {
+  --scene-x: 320px;
   width: 1032px;
   height: 250px;
   background-image: url("assets/top/bg.jpg");
@@ -31,7 +32,10 @@ body { margin: 0; }
 }
 
 .creative--left { background-image: var(--left-art); }
-.creative--right { background-image: var(--right-art); }
+.creative--right {
+  --scene-x: 1352px;
+  background-image: var(--right-art);
+}
 
 .seam {
   --seam-width: 44px;
@@ -68,6 +72,8 @@ body { margin: 0; }
   --seam-art: var(--right-art);
   --seam-x: calc(-1 * var(--seam-width));
 }
+
+.ambient { display: none; }
 
 .layer {
   position: absolute;
@@ -112,7 +118,10 @@ body { margin: 0; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .creative { --ease-out: cubic-bezier(0.22, 1, 0.36, 1); }
+  .creative {
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ambient-start: calc(var(--start-offset) + 5500ms);
+  }
 
   .logo {
     --enter-at: 200ms;
@@ -157,7 +166,21 @@ body { margin: 0; }
   .motion-playing .cta {
     animation:
       layer-in var(--enter-duration) var(--ease-out) calc(var(--start-offset) + var(--enter-at)) backwards,
-      cta-pulse 3s ease-in-out calc(var(--start-offset) + 5500ms) 8;
+      cta-pulse 3s ease-in-out var(--ambient-start) 8;
+  }
+
+  /* Clip one moving pool of light to each part of the 1672px scene. */
+  .motion-playing .ambient {
+    --light-width: 560px;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: calc(-1 * (var(--light-width) + var(--scene-x, 0px)));
+    width: var(--light-width);
+    height: 975px;
+    background: radial-gradient(ellipse 50% 66% at 50% 28%, rgb(255 248 218 / 30%), transparent);
+    pointer-events: none;
+    animation: light-sweep 12s linear var(--ambient-start) 2;
   }
 
   @keyframes layer-in {
@@ -168,5 +191,10 @@ body { margin: 0; }
   @keyframes cta-pulse {
     0%, 100% { transform: scale(1); }
     45% { transform: scale(1.035); }
+  }
+
+  @keyframes light-sweep {
+    from { transform: none; }
+    to { transform: translateX(calc(1672px + var(--light-width))); }
   }
 }
