@@ -35,9 +35,9 @@
 <body>
   <main class="preview" aria-label="Fireplace preview">
     <div class="fireplace">
-      <iframe class="left" src="left.html" width="320" height="975" title="Left skyscraper"></iframe>
-      <iframe class="top" src="top.html" width="1032" height="250" title="Top banner"></iframe>
-      <iframe class="right" src="right.html" width="320" height="975" title="Right skyscraper"></iframe>
+      <iframe class="left" src="left.html?sync" width="320" height="975" title="Left skyscraper"></iframe>
+      <iframe class="top" src="top.html?sync" width="1032" height="250" title="Top banner"></iframe>
+      <iframe class="right" src="right.html?sync" width="320" height="975" title="Right skyscraper"></iframe>
     </div>
   </main>
   <script>
@@ -49,6 +49,12 @@
       fireplace.style.transform = `scale(${scale})`;
     }).observe(preview);
 
+    window.addEventListener('load', () => {
+      const startAt = performance.timeOrigin + performance.now() + 120;
+      for (const frame of fireplace.querySelectorAll('iframe')) {
+        frame.contentWindow.postMessage({ type: 'fireplace:start', startAt }, location.origin);
+      }
+    }, { once: true });
   </script>
 </body>
 </html>

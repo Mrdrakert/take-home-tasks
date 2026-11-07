@@ -90,3 +90,83 @@ body { margin: 0; }
   border-radius: 8px;
 }
 
+.headline { isolation: isolate; }
+
+.headline-line {
+  position: absolute;
+  inset: 0;
+  background: url("assets/top/hl.png") 0 0 / 100% 100% no-repeat;
+  mask-image: var(--line-mask);
+  mix-blend-mode: plus-lighter;
+}
+
+/* The complementary masks overlap between letters and share the baked shadow. */
+.headline-line:nth-child(1) {
+  --line-mask: linear-gradient(#000 78px, transparent 92px);
+}
+.headline-line:nth-child(2) {
+  --line-mask: linear-gradient(transparent 78px, #000 92px, #000 146px, transparent 159px);
+}
+.headline-line:nth-child(3) {
+  --line-mask: linear-gradient(transparent 146px, #000 159px);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .creative { --ease-out: cubic-bezier(0.22, 1, 0.36, 1); }
+
+  .logo {
+    --enter-at: 200ms;
+    --enter-duration: 950ms;
+    --entry-scale: 0.95;
+    transform-origin: 50% 12.8%;
+  }
+
+  .headline-line {
+    --enter-duration: 850ms;
+    --entry-y: 0px;
+  }
+
+  .headline-line:nth-child(1) { --enter-at: 550ms; }
+  .headline-line:nth-child(2) { --enter-at: 950ms; }
+  .headline-line:nth-child(3) { --enter-at: 1350ms; }
+
+  .panel {
+    --enter-at: 1850ms;
+    --enter-duration: 1050ms;
+    --settled-opacity: 0.8;
+  }
+
+  .copy {
+    --enter-at: 2500ms;
+    --enter-duration: 850ms;
+    --entry-y: 6px;
+  }
+
+  .cta {
+    --enter-at: 3450ms;
+    --enter-duration: 1000ms;
+    --entry-y: 8px;
+  }
+
+  .motion-enabled:not(.motion-playing) :is(.logo, .headline-line, .panel, .copy, .cta) { opacity: 0; }
+
+  .motion-playing :is(.logo, .headline-line, .panel, .copy, .cta) {
+    animation: layer-in var(--enter-duration) var(--ease-out) calc(var(--start-offset) + var(--enter-at)) backwards;
+  }
+
+  .motion-playing .cta {
+    animation:
+      layer-in var(--enter-duration) var(--ease-out) calc(var(--start-offset) + var(--enter-at)) backwards,
+      cta-pulse 3s ease-in-out calc(var(--start-offset) + 5500ms) 8;
+  }
+
+  @keyframes layer-in {
+    from { opacity: 0; transform: translateY(var(--entry-y, 12px)) scale(var(--entry-scale, 1)); }
+    to { opacity: var(--settled-opacity, 1); transform: none; }
+  }
+
+  @keyframes cta-pulse {
+    0%, 100% { transform: scale(1); }
+    45% { transform: scale(1.035); }
+  }
+}
