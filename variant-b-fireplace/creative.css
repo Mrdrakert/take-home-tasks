@@ -1,6 +1,8 @@
 body { margin: 0; }
 
 .creative {
+  --left-art: url("assets/left/bg.jpg");
+  --right-art: url("assets/right/bg.jpg");
   position: relative;
   display: block;
   overflow: hidden;
@@ -28,8 +30,44 @@ body { margin: 0; }
   height: 975px;
 }
 
-.creative--left { background-image: url("assets/left/bg.jpg"); }
-.creative--right { background-image: url("assets/right/bg.jpg"); }
+.creative--left { background-image: var(--left-art); }
+.creative--right { background-image: var(--right-art); }
+
+.seam {
+  --seam-width: 44px;
+  position: absolute;
+  top: 0;
+  width: var(--seam-width);
+  height: 280px;
+  mask-image: linear-gradient(#000 250px, transparent 280px);
+  pointer-events: none;
+}
+
+.seam::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--seam-art) var(--seam-x) 0 / 320px 975px no-repeat;
+  mask-image: linear-gradient(var(--seam-fade), #000 16px, transparent var(--seam-width));
+}
+
+.seam--left { left: 0; --seam-fade: to right; }
+.seam--right { right: 0; --seam-fade: to left; }
+
+/* Each join samples two adjacent strips from the same side background. */
+.creative--left .seam {
+  --seam-art: var(--left-art);
+  --seam-x: calc(2 * var(--seam-width) - 320px);
+}
+.creative--top .seam--left {
+  --seam-art: var(--left-art);
+  --seam-x: calc(var(--seam-width) - 320px);
+}
+.creative--top .seam--right { --seam-art: var(--right-art); --seam-x: 0px; }
+.creative--right .seam {
+  --seam-art: var(--right-art);
+  --seam-x: calc(-1 * var(--seam-width));
+}
 
 .layer {
   position: absolute;

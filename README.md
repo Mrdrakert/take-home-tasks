@@ -10,4 +10,4 @@ Tap to start and jump. Space and ↑ also jump during play. Clear all 15 obstacl
 
 With the same local server running, open the [Fireplace preview](http://localhost:8000/variant-b-fireplace/preview.html). The top banner and both side panels are separate HTML creatives.
 
-Each part uses its supplied pre-cut background at half the export size. This preserves the mockup’s crop and product positions, including where the rock ends at the right edge of the banner. The top banner uses the supplied headline artwork and its wording.
+Each part uses its supplied pre-cut background at half the export size. These crops preserve the mockup's product positions and keep the rock inside the top banner. At each join, the neighboring panels sample consecutive strips of moss from the same side export and blend them into their own backgrounds. The preview places the panels flush so the texture continues across the joins. The top banner uses the supplied headline artwork and its wording.
